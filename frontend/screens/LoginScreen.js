@@ -17,6 +17,11 @@ export default function LoginScreen({ navigation }) {
       Alert.alert('Error', 'Please enter email and password');
       return;
     }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return;
+    }
     setLoading(true);
     try {
       const res = await api.post('/auth/login', { email, password });

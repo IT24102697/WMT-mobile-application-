@@ -56,6 +56,19 @@ export default function AdminDiscountScreen() {
       Alert.alert('Error', 'Code and percent are required');
       return;
     }
+    const numPercent = Number(percent);
+    if (isNaN(numPercent) || numPercent <= 0 || numPercent > 100) {
+      Alert.alert('Error', 'Percent must be a number between 1 and 100');
+      return;
+    }
+    if (minOrder && (isNaN(Number(minOrder)) || Number(minOrder) < 0)) {
+      Alert.alert('Error', 'Minimum order must be a valid positive number');
+      return;
+    }
+    if (usageLimit && (isNaN(Number(usageLimit)) || Number(usageLimit) <= 0)) {
+      Alert.alert('Error', 'Usage limit must be a valid positive number');
+      return;
+    }
     setSaving(true);
     try {
       if (editing) {

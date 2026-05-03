@@ -17,6 +17,11 @@ export default function ForgotPasswordScreen({ navigation }) {
       Alert.alert('Error', 'Please enter your email');
       return;
     }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return;
+    }
     setLoading(true);
     try {
       await api.post('/auth/forgot-password', { email });

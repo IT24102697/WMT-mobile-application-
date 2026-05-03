@@ -58,8 +58,24 @@ export default function StockManagementScreen() {
   };
 
   const handleSave = async () => {
-    if (!name || !unit || !currentStock || !minStock) {
+    if (!name || !name.trim() || !unit || !currentStock || !minStock) {
       Alert.alert('Error', 'Please fill all required fields');
+      return;
+    }
+    if (isNaN(Number(currentStock)) || Number(currentStock) < 0) {
+      Alert.alert('Error', 'Current stock must be a valid non-negative number');
+      return;
+    }
+    if (isNaN(Number(minStock)) || Number(minStock) < 0) {
+      Alert.alert('Error', 'Minimum stock must be a valid non-negative number');
+      return;
+    }
+    if (usagePerOrder && (isNaN(Number(usagePerOrder)) || Number(usagePerOrder) < 0)) {
+      Alert.alert('Error', 'Usage per order must be a valid non-negative number');
+      return;
+    }
+    if (price && (isNaN(Number(price)) || Number(price) < 0)) {
+      Alert.alert('Error', 'Price must be a valid non-negative number');
       return;
     }
     setSaving(true);

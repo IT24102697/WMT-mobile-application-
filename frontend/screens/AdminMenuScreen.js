@@ -48,8 +48,13 @@ export default function AdminMenuScreen() {
   };
 
   const handleSave = async () => {
-    if (!name || !price || !category) {
+    if (!name || !name.trim() || !price || !category) {
       Alert.alert('Error', 'Name, price and category are required');
+      return;
+    }
+    const numPrice = Number(price);
+    if (isNaN(numPrice) || numPrice < 0) {
+      Alert.alert('Error', 'Price must be a valid non-negative number');
       return;
     }
     setSaving(true);

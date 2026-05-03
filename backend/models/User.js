@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema({
   enabled:            { type: Boolean, default: true },
 
   // Customer specific
-  trustScore:         { type: Number, default: 100 },
+  trustScore:         { type: Number, default: 10 },
   address:            { type: String },
 
   // Staff specific

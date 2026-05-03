@@ -35,6 +35,14 @@ export default function ProfileScreen({ navigation }) {
   };
 
   const handleUpdateProfile = async () => {
+    if (!name || !name.trim()) {
+      Alert.alert('Error', 'Full Name is required');
+      return;
+    }
+    if (mobile && !/^\d{10}$/.test(mobile)) {
+      Alert.alert('Error', 'Mobile number must be exactly 10 digits');
+      return;
+    }
     setSaving(true);
     try {
       await api.put('/users/profile', { name, mobile, address });
@@ -97,8 +105,9 @@ export default function ProfileScreen({ navigation }) {
           style={styles.input}
           value={mobile}
           onChangeText={setMobile}
-          placeholder="Mobile Number"
+          placeholder="Mobile Number (10 digits)"
           keyboardType="phone-pad"
+          maxLength={10}
         />
 
         <Text style={styles.label}>Address</Text>

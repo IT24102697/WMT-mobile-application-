@@ -30,6 +30,15 @@ export default function RegisterScreen({ navigation }) {
       Alert.alert('Error', 'Please fill all required fields');
       return;
     }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return;
+    }
+    if (mobile && !/^\d{10}$/.test(mobile)) {
+      Alert.alert('Error', 'Mobile number must be exactly 10 digits');
+      return;
+    }
     if (password.length < 6) {
       Alert.alert('Error', 'Password must be at least 6 characters');
       return;
@@ -136,8 +145,9 @@ export default function RegisterScreen({ navigation }) {
         <TextInput style={styles.input} placeholder="Email *"
           value={email} onChangeText={setEmail}
           keyboardType="email-address" autoCapitalize="none" />
-        <TextInput style={styles.input} placeholder="Mobile"
-          value={mobile} onChangeText={setMobile} keyboardType="phone-pad" />
+        <TextInput style={styles.input} placeholder="Mobile (10 digits)"
+          value={mobile} onChangeText={setMobile} keyboardType="phone-pad"
+          maxLength={10} />
         <TextInput style={styles.input} placeholder="Password * (min 6 characters)"
           value={password} onChangeText={setPassword} secureTextEntry />
 

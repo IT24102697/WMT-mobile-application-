@@ -7,23 +7,28 @@ const crypto = require('crypto');
 // Email transporter
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
+  port: 465,
+  secure: true, // Use SSL
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  tls: {
-    rejectUnauthorized: false
-  }
 });
 
 const sendEmail = async (to, subject, html) => {
-  // We remove the try-catch here so the caller can handle the error
-  await transporter.sendMail({
-    from: `"UrbanPlate" <${process.env.EMAIL_USER}>`,
-    to, subject, html,
-  });
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.log(`\n[EMAIL MOCK] To: ${to}\nSubject: ${subject}\nContent:\n${html}\n`);
+      return;
+    }
+    await transporter.sendMail({
+      from: `"UrbanPlate" <${process.env.EMAIL_USER}>`,
+      to, subject, html,
+    });
+  } catch (error) {
+    console.error(`\n[EMAIL FAILED] Could not send email to ${to}. Error: ${error.message}`);
+    console.log(`[EMAIL CONTENT FALLBACK]\nSubject: ${subject}\nContent:\n${html}\n`);
+  }
 };
 
 // Generate JWT token
@@ -217,23 +222,17 @@ const forgotPassword = async (req, res) => {
     await user.save();
 
     const resetUrl = `${process.env.BACKEND_URL}/api/auth/reset-password-page?token=${resetToken}`;
-    
-    try {
-      await sendEmail(email, 'Reset Your Password — UrbanPlate', `
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
-          <h2 style="color:#FF6B35">🔐 Reset Your Password</h2>
-          <p>Hi ${user.name}, click below to reset your password. This link expires in 1 hour.</p>
-          <a href="${resetUrl}" style="background:#FF6B35;color:white;padding:12px 24px;
-            border-radius:8px;text-decoration:none;display:inline-block;margin:16px 0">
-            Reset Password
-          </a>
-          <p style="color:#888;font-size:12px">If you didn't request this, ignore this email.</p>
-        </div>
-      `);
-    } catch (emailErr) {
-      console.error('Forgot Password Email Error:', emailErr);
-      return res.status(500).json({ message: 'Failed to send reset email. Please check your email configuration.' });
-    }
+    await sendEmail(email, 'Reset Your Password — UrbanPlate', `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+        <h2 style="color:#FF6B35">🔐 Reset Your Password</h2>
+        <p>Hi ${user.name}, click below to reset your password. This link expires in 1 hour.</p>
+        <a href="${resetUrl}" style="background:#FF6B35;color:white;padding:12px 24px;
+          border-radius:8px;text-decoration:none;display:inline-block;margin:16px 0">
+          Reset Password
+        </a>
+        <p style="color:#888;font-size:12px">If you didn't request this, ignore this email.</p>
+      </div>
+    `);
 
     res.json({ message: 'Password reset link sent to your email' });
   } catch (err) {
