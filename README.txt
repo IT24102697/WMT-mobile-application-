@@ -3,11 +3,25 @@
                          README - Project Overview
 ================================================================================
 
-PROJECT NAME   : UrbanPlate Mobile Application
-STUDENT ID     : IT24102697
-MODULE         : WMT Mobile Application Development
-DESCRIPTION    : A full-stack mobile food ordering & management system built
-                 with React Native (Expo) frontend and Node.js / Express.js backend.
+01). GitHub Repository Link
+
+https://github.com/IT24102697/WMT-mobile-application-.git
+ 
+
+02).Team Details
+
+Group Number: 
+Member 1: IT24102697 – Jayawardhana D D S – WMT
+Member 2: IT24100930 – Devmika W P L – WMT
+Member 3: IT24100095 – Widanagamage W D S N – WMT
+Member 4: IT24101594 – Perera K G H D – WMT
+Member 5: IT24101062 – Jayasekara P M S – WMT
+
+
+
+03). Deployment Details
+
+Backend URL: wmt-mobile-application-production.up.railway.app 
 
 --------------------------------------------------------------------------------
 TECH STACK
