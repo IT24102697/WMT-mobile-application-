@@ -1,0 +1,137 @@
+================================================================================
+             URBANPLATE MOBILE APPLICATION
+          API ENDPOINT REFERENCE TABLE
+           Student ID: IT24102697
+================================================================================
+
+Base URL   : http://<server-ip>:5000
+Auth Header: Authorization: Bearer <JWT_TOKEN>
+Format     : application/json
+
+Access Levels:
+  [PUBLIC]  - No authentication required
+  [AUTH]    - Any logged-in user (valid JWT)
+  [STAFF]   - Staff or Admin role
+  [ADMIN]   - Admin role only
+
+================================================================================
+1. AUTHENTICATION   /api/auth
+================================================================================
+
+METHOD  ENDPOINT                          ACCESS    DESCRIPTION
+------  --------------------------------  --------  ----------------------------
+POST    /api/auth/login                   PUBLIC    Login and receive JWT token
+POST    /api/auth/register/customer       PUBLIC    Register new customer account
+POST    /api/auth/register/staff          PUBLIC    Register staff (pending admin approval)
+GET     /api/auth/verify-email            PUBLIC    Verify email via token link
+POST    /api/auth/forgot-password         PUBLIC    Send password-reset email
+GET     /api/auth/reset-password-page     PUBLIC    Render password-reset web page
+POST    /api/auth/reset-password          PUBLIC    Submit new password after reset
+GET     /api/auth/pending-staff           ADMIN     List staff accounts awaiting approval
+PUT     /api/auth/approve-staff/:id       ADMIN     Approve a pending staff account
+
+================================================================================
+2. USERS   /api/users
+================================================================================
+
+METHOD  ENDPOINT                          ACCESS    DESCRIPTION
+------  --------------------------------  --------  ----------------------------
+GET     /api/users/profile                AUTH      Get current user's profile
+PUT     /api/users/profile                AUTH      Update current user's profile
+PUT     /api/users/change-password        AUTH      Change account password
+GET     /api/users/all                    ADMIN     Get all registered users
+PUT     /api/users/toggle/:id             ADMIN     Enable / disable a user account
+
+================================================================================
+3. MENU   /api/menu
+================================================================================
+
+METHOD  ENDPOINT                          ACCESS    DESCRIPTION
+------  --------------------------------  --------  ----------------------------
+GET     /api/menu/available               PUBLIC    List all available menu items
+GET     /api/menu/popular                 PUBLIC    List popular / featured items
+GET     /api/menu/analytics               STAFF     View menu sales analytics
+GET     /api/menu/category/:category      PUBLIC    Filter items by category
+GET     /api/menu/                        ADMIN     List ALL menu items (incl. hidden)
+POST    /api/menu/                        ADMIN     Create a new menu item
+PUT     /api/menu/toggle/:id              ADMIN     Toggle item availability on/off
+PUT     /api/menu/:id                     ADMIN     Update menu item details
+DELETE  /api/menu/:id                     ADMIN     Delete a menu item
+
+================================================================================
+4. ORDERS   /api/orders
+================================================================================
+
+METHOD  ENDPOINT                          ACCESS    DESCRIPTION
+------  --------------------------------  --------  ----------------------------
+POST    /api/orders/                      AUTH      Place a new order
+GET     /api/orders/my                    AUTH      Get current user's order history
+GET     /api/orders/                      STAFF     Get all orders (staff view)
+GET     /api/orders/:id                   AUTH      Get a specific order by ID
+PUT     /api/orders/:id/status            STAFF     Update order status (preparing, ready, etc.)
+PUT     /api/orders/:id/cancel            AUTH      Cancel an order
+
+================================================================================
+5. PAYMENTS & REFUNDS   /api/payment
+================================================================================
+
+METHOD  ENDPOINT                          ACCESS    DESCRIPTION
+------  --------------------------------  --------  ----------------------------
+POST    /api/payment/process              AUTH      Process payment for an order
+GET     /api/payment/invoice/:orderId     AUTH      Download / view invoice for an order
+POST    /api/payment/refund/request       AUTH      Submit a refund request
+PUT     /api/payment/refund/process/:id   STAFF     Approve or reject a refund
+GET     /api/payment/refunds/all          STAFF     List all refund requests
+GET     /api/payment/refunds/my           AUTH      List current user's refund requests
+GET     /api/payment/all                  STAFF     List all payments
+GET     /api/payment/my                   AUTH      List current user's payments
+
+================================================================================
+6. INVENTORY   /api/inventory
+================================================================================
+
+METHOD  ENDPOINT                          ACCESS    DESCRIPTION
+------  --------------------------------  --------  ----------------------------
+GET     /api/inventory/                   STAFF     List all ingredients / stock items
+GET     /api/inventory/low-stock          STAFF     List items below minimum stock level
+GET     /api/inventory/summary            STAFF     Get aggregated inventory summary
+POST    /api/inventory/                   ADMIN     Add a new ingredient / stock item
+PUT     /api/inventory/:id                ADMIN     Update ingredient details or threshold
+PUT     /api/inventory/:id/restock        STAFF     Restock an ingredient
+DELETE  /api/inventory/:id                ADMIN     Delete an ingredient record
+
+================================================================================
+7. TRUST SCORE & DISCOUNTS   /api/trust
+================================================================================
+
+METHOD  ENDPOINT                          ACCESS    DESCRIPTION
+------  --------------------------------  --------  ----------------------------
+GET     /api/trust/my                     AUTH      Get own trust score
+GET     /api/trust/all                    ADMIN     Get all customers' trust scores
+PUT     /api/trust/update/:customerId     ADMIN     Manually update a customer's score
+POST    /api/trust/discount               ADMIN     Create a new discount code
+GET     /api/trust/discounts              AUTH      List all active discounts
+POST    /api/trust/discount/validate      AUTH      Validate and apply a discount code
+PUT     /api/trust/discount/toggle/:id    ADMIN     Enable / disable a discount
+PUT     /api/trust/discount/:id           ADMIN     Update discount details
+DELETE  /api/trust/discount/:id           ADMIN     Delete a discount
+
+================================================================================
+SUMMARY
+================================================================================
+
+  Route Group              | Endpoints | Public | Auth | Staff | Admin
+  -------------------------|-----------|--------|------|-------|------
+  Authentication /api/auth |     9     |   7    |  0   |   0   |  2
+  Users /api/users         |     5     |   0    |  3   |   0   |  2
+  Menu /api/menu           |     9     |   3    |  0   |   1   |  5
+  Orders /api/orders       |     6     |   0    |  4   |   2   |  0
+  Payments /api/payment    |     8     |   0    |  5   |   3   |  0
+  Inventory /api/inventory |     7     |   0    |  0   |   3   |  4  (restock=Staff)
+  Trust /api/trust         |     9     |   0    |  4   |   0   |  5
+  -------------------------|-----------|--------|------|-------|------
+  TOTAL                    |    53     |  10    | 16   |   6   | 18  (some overlap)
+
+================================================================================
+  UrbanPlate Mobile App  |  IT24102697  |  WMT Mobile Application
+================================================================================
