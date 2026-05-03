@@ -6,22 +6,24 @@ const crypto = require('crypto');
 
 // Email transporter
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  tls: {
+    rejectUnauthorized: false
+  }
 });
 
 const sendEmail = async (to, subject, html) => {
-  try {
-    await transporter.sendMail({
-      from: `"UrbanPlate" <${process.env.EMAIL_USER}>`,
-      to, subject, html,
-    });
-  } catch (err) {
-    console.log('Email error:', err.message);
-  }
+  // We remove the try-catch here so the caller can handle the error
+  await transporter.sendMail({
+    from: `"UrbanPlate" <${process.env.EMAIL_USER}>`,
+    to, subject, html,
+  });
 };
 
 // Generate JWT token
@@ -215,17 +217,23 @@ const forgotPassword = async (req, res) => {
     await user.save();
 
     const resetUrl = `${process.env.BACKEND_URL}/api/auth/reset-password-page?token=${resetToken}`;
-    await sendEmail(email, 'Reset Your Password — UrbanPlate', `
-      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
-        <h2 style="color:#FF6B35">🔐 Reset Your Password</h2>
-        <p>Hi ${user.name}, click below to reset your password. This link expires in 1 hour.</p>
-        <a href="${resetUrl}" style="background:#FF6B35;color:white;padding:12px 24px;
-          border-radius:8px;text-decoration:none;display:inline-block;margin:16px 0">
-          Reset Password
-        </a>
-        <p style="color:#888;font-size:12px">If you didn't request this, ignore this email.</p>
-      </div>
-    `);
+    
+    try {
+      await sendEmail(email, 'Reset Your Password — UrbanPlate', `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+          <h2 style="color:#FF6B35">🔐 Reset Your Password</h2>
+          <p>Hi ${user.name}, click below to reset your password. This link expires in 1 hour.</p>
+          <a href="${resetUrl}" style="background:#FF6B35;color:white;padding:12px 24px;
+            border-radius:8px;text-decoration:none;display:inline-block;margin:16px 0">
+            Reset Password
+          </a>
+          <p style="color:#888;font-size:12px">If you didn't request this, ignore this email.</p>
+        </div>
+      `);
+    } catch (emailErr) {
+      console.error('Forgot Password Email Error:', emailErr);
+      return res.status(500).json({ message: 'Failed to send reset email. Please check your email configuration.' });
+    }
 
     res.json({ message: 'Password reset link sent to your email' });
   } catch (err) {
@@ -236,23 +244,43 @@ const forgotPassword = async (req, res) => {
 // @GET /api/auth/reset-password-page?token=xxx
 const resetPasswordPage = (req, res) => {
   const { token } = req.query;
+  if (!token) {
+    return res.status(400).send('Invalid request: Missing token');
+  }
   res.send(`
     <html>
-    <body style="font-family:Arial;max-width:400px;margin:50px auto;padding:20px">
-      <h2 style="color:#FF6B35">🍽️ Reset Password</h2>
-      <form action="/api/auth/reset-password" method="POST">
-        <input type="hidden" name="token" value="${token}"/>
-        <div style="margin-bottom:16px">
-          <label style="display:block;margin-bottom:6px">New Password</label>
-          <input type="password" name="newPassword" required
-            style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:16px"/>
-        </div>
-        <button type="submit"
-          style="background:#FF6B35;color:white;padding:12px 24px;border:none;
-          border-radius:8px;font-size:16px;cursor:pointer;width:100%">
-          Reset Password
-        </button>
-      </form>
+    <head>
+      <title>Reset Password — UrbanPlate</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 400px; text-align: center; }
+        h2 { color: #FF6B35; margin-bottom: 24px; font-weight: 700; }
+        p { color: #666; margin-bottom: 24px; font-size: 15px; }
+        .form-group { text-align: left; margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 500; color: #333; }
+        input { width: 100%; padding: 12px 16px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box; transition: border-color 0.2s; }
+        input:focus { outline: none; border-color: #FF6B35; }
+        button { background: #FF6B35; color: white; padding: 14px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; transition: background 0.2s; margin-top: 10px; }
+        button:hover { background: #e85a2a; }
+        .footer { margin-top: 24px; font-size: 13px; color: #999; }
+      </style>
+    </head>
+    <body>
+      <div class="card">
+        <div style="font-size: 48px; margin-bottom: 16px;">🍽️</div>
+        <h2>Reset Password</h2>
+        <p>Please enter your new password below.</p>
+        <form action="/api/auth/reset-password" method="POST">
+          <input type="hidden" name="token" value="${token}"/>
+          <div class="form-group">
+            <label for="newPassword">New Password</label>
+            <input type="password" name="newPassword" id="newPassword" required minlength="6" placeholder="At least 6 characters" autofocus/>
+          </div>
+          <button type="submit">Reset Password</button>
+        </form>
+        <div class="footer">UrbanPlate &copy; 2024</div>
+      </div>
     </body>
     </html>
   `);
@@ -264,7 +292,7 @@ const resetPassword = async (req, res) => {
     const { token, newPassword } = req.body;
     const user = await User.findOne({
       passwordResetToken: token,
-      passwordResetExpires: { $gt: Date.now() },
+      passwordResetExpires: { $gt: new Date() },
     });
 
     if (!user) {
@@ -275,9 +303,19 @@ const resetPassword = async (req, res) => {
       `);
     }
 
+    if (!newPassword || newPassword.length < 6) {
+      return res.send(`
+        <html><body style="font-family:Arial;text-align:center;padding:50px">
+          <h2 style="color:red">❌ Password must be at least 6 characters long</h2>
+          <p><a href="javascript:history.back()">Go back</a></p>
+        </body></html>
+      `);
+    }
+
     user.password = await bcrypt.hash(newPassword, 10);
     user.passwordResetToken = null;
     user.passwordResetExpires = null;
+    user.verified = true; // Mark as verified since they have access to email
     await user.save();
 
     res.send(`
