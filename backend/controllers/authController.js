@@ -4,30 +4,31 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 
-// Email transporter
+// Email transporter — port 587 + TLS works on Railway
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 465,
-  secure: true, // Use SSL
+  port: 587,
+  secure: false,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  tls: {
+    rejectUnauthorized: false
+  }
 });
 
 const sendEmail = async (to, subject, html) => {
   try {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.log(`\n[EMAIL MOCK] To: ${to}\nSubject: ${subject}\nContent:\n${html}\n`);
-      return;
-    }
     await transporter.sendMail({
       from: `"UrbanPlate" <${process.env.EMAIL_USER}>`,
       to, subject, html,
     });
+    console.log('Email sent to:', to);
   } catch (error) {
-    console.error(`\n[EMAIL FAILED] Could not send email to ${to}. Error: ${error.message}`);
-    console.log(`[EMAIL CONTENT FALLBACK]\nSubject: ${subject}\nContent:\n${html}\n`);
+    console.error('Email error:', error.message);
+    // Re-throw so callers know email failed
+    throw error;
   }
 };
 
@@ -64,17 +65,24 @@ const registerCustomer = async (req, res) => {
 
     // Send verification email
     const verifyUrl = `${process.env.BACKEND_URL}/api/auth/verify-email?token=${verificationToken}`;
-    await sendEmail(email, 'Verify Your Email — UrbanPlate', `
-      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
-        <h2 style="color:#FF6B35">🍽️ Welcome to UrbanPlate!</h2>
-        <p>Hi ${name}, please verify your email to complete registration.</p>
-        <a href="${verifyUrl}" style="background:#FF6B35;color:white;padding:12px 24px;
-          border-radius:8px;text-decoration:none;display:inline-block;margin:16px 0">
-          Verify Email
-        </a>
-        <p style="color:#888;font-size:12px">If you didn't register, ignore this email.</p>
-      </div>
-    `);
+    try {
+      await sendEmail(email, 'Verify Your Email — UrbanPlate', `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+          <h2 style="color:#FF6B35">🍽️ Welcome to UrbanPlate!</h2>
+          <p>Hi ${name}, please verify your email to complete registration.</p>
+          <a href="${verifyUrl}" style="background:#FF6B35;color:white;padding:12px 24px;
+            border-radius:8px;text-decoration:none;display:inline-block;margin:16px 0">
+            Verify Email
+          </a>
+          <p style="color:#888;font-size:12px">If you didn't register, ignore this email.</p>
+        </div>
+      `);
+    } catch (emailErr) {
+      console.error('Registration email failed:', emailErr.message);
+      // Delete the user since email failed
+      await User.findByIdAndDelete(user._id);
+      return res.status(500).json({ message: 'Registration failed: Could not send verification email. Please try again.' });
+    }
 
     res.status(201).json({
       message: 'Registration successful! Please check your email to verify your account.',
@@ -109,22 +117,28 @@ const registerStaff = async (req, res) => {
 
     // Send verification email to staff
     const verifyUrl = `${process.env.BACKEND_URL}/api/auth/verify-email?token=${verificationToken}`;
-    await sendEmail(email, 'Verify Your Email — UrbanPlate Staff', `
-      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
-        <h2 style="color:#FF6B35">🍽️ UrbanPlate Staff Registration</h2>
-        <p>Hi ${name}, please verify your email first.</p>
-        <p>After verification, your account will be reviewed by an admin before you can login.</p>
-        <a href="${verifyUrl}" style="background:#FF6B35;color:white;padding:12px 24px;
-          border-radius:8px;text-decoration:none;display:inline-block;margin:16px 0">
-          Verify Email
-        </a>
-      </div>
-    `);
+    try {
+      await sendEmail(email, 'Verify Your Email — UrbanPlate Staff', `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+          <h2 style="color:#FF6B35">🍽️ UrbanPlate Staff Registration</h2>
+          <p>Hi ${name}, please verify your email first.</p>
+          <p>After verification, your account will be reviewed by an admin before you can login.</p>
+          <a href="${verifyUrl}" style="background:#FF6B35;color:white;padding:12px 24px;
+            border-radius:8px;text-decoration:none;display:inline-block;margin:16px 0">
+            Verify Email
+          </a>
+        </div>
+      `);
+    } catch (emailErr) {
+      console.error('Staff registration email failed:', emailErr.message);
+      await User.findByIdAndDelete(user._id);
+      return res.status(500).json({ message: 'Registration failed: Could not send verification email. Please try again.' });
+    }
 
-    // Notify admin about new staff registration
+    // Notify admin about new staff registration (non-blocking)
     const admins = await User.find({ role: 'ADMIN' });
     for (const admin of admins) {
-      await sendEmail(admin.email, 'New Staff Registration — UrbanPlate', `
+      sendEmail(admin.email, 'New Staff Registration — UrbanPlate', `
         <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
           <h2 style="color:#FF6B35">New Staff Registration</h2>
           <p>A new staff member has registered and needs your approval:</p>
@@ -136,7 +150,7 @@ const registerStaff = async (req, res) => {
           </table>
           <p>Please login to the admin panel to approve or reject this application.</p>
         </div>
-      `);
+      `).catch(err => console.error('Admin notification failed:', err.message));
     }
 
     res.status(201).json({
@@ -222,17 +236,23 @@ const forgotPassword = async (req, res) => {
     await user.save();
 
     const resetUrl = `${process.env.BACKEND_URL}/api/auth/reset-password-page?token=${resetToken}`;
-    await sendEmail(email, 'Reset Your Password — UrbanPlate', `
-      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
-        <h2 style="color:#FF6B35">🔐 Reset Your Password</h2>
-        <p>Hi ${user.name}, click below to reset your password. This link expires in 1 hour.</p>
-        <a href="${resetUrl}" style="background:#FF6B35;color:white;padding:12px 24px;
-          border-radius:8px;text-decoration:none;display:inline-block;margin:16px 0">
-          Reset Password
-        </a>
-        <p style="color:#888;font-size:12px">If you didn't request this, ignore this email.</p>
-      </div>
-    `);
+
+    try {
+      await sendEmail(email, 'Reset Your Password — UrbanPlate', `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+          <h2 style="color:#FF6B35">🔐 Reset Your Password</h2>
+          <p>Hi ${user.name}, click below to reset your password. This link expires in 1 hour.</p>
+          <a href="${resetUrl}" style="background:#FF6B35;color:white;padding:12px 24px;
+            border-radius:8px;text-decoration:none;display:inline-block;margin:16px 0">
+            Reset Password
+          </a>
+          <p style="color:#888;font-size:12px">If you didn't request this, ignore this email.</p>
+        </div>
+      `);
+    } catch (emailErr) {
+      console.error('Forgot password email failed:', emailErr.message);
+      return res.status(500).json({ message: 'Failed to send reset email. Please try again later.' });
+    }
 
     res.json({ message: 'Password reset link sent to your email' });
   } catch (err) {
@@ -314,7 +334,7 @@ const resetPassword = async (req, res) => {
     user.password = await bcrypt.hash(newPassword, 10);
     user.passwordResetToken = null;
     user.passwordResetExpires = null;
-    user.verified = true; // Mark as verified since they have access to email
+    user.verified = true;
     await user.save();
 
     res.send(`
