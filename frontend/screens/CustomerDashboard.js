@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator
+  ScrollView, ActivityIndicator, StatusBar, ImageBackground
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
+import { Theme } from '../theme';
 
 export default function CustomerDashboard({ navigation }) {
   const [user, setUser] = useState(null);
@@ -37,20 +38,22 @@ export default function CustomerDashboard({ navigation }) {
   );
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>Welcome back,</Text>
-          <Text style={styles.name}>{user?.name} 👋</Text>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" />
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Header with gradient-like solid block */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.greeting}>Welcome back,</Text>
+            <Text style={styles.name}>{user?.name} 👋</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.profileBtn}
+            onPress={() => navigation.navigate('Profile')}
+          >
+            <Text style={styles.profileBtnText}>👤</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          style={styles.profileBtn}
-          onPress={() => navigation.navigate('Profile')}
-        >
-          <Text style={styles.profileBtnText}>👤</Text>
-        </TouchableOpacity>
-      </View>
       
 
       {/* Trust Score Banner */}
@@ -133,38 +136,54 @@ export default function CustomerDashboard({ navigation }) {
       </TouchableOpacity>
 
       <View style={{ height: 40 }} />
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container:      { flex: 1, backgroundColor: '#f5f5f5' },
-  center:         { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header:         { flexDirection: 'row', justifyContent: 'space-between',
-                    alignItems: 'center', padding: 24, paddingBottom: 16,
-                    backgroundColor: '#FF6B35' },
-  greeting:       { fontSize: 14, color: 'rgba(255,255,255,0.8)' },
-  name:           { fontSize: 22, fontWeight: 'bold', color: '#fff' },
-  profileBtn:     { width: 44, height: 44, borderRadius: 22,
-                    backgroundColor: 'rgba(255,255,255,0.3)',
-                    alignItems: 'center', justifyContent: 'center' },
-  profileBtnText: { fontSize: 20 },
-  trustBanner:    { backgroundColor: '#fff', margin: 16, borderRadius: 12,
-                    padding: 16, flexDirection: 'row',
-                    justifyContent: 'space-between', alignItems: 'center' },
-  trustLabel:     { fontSize: 13, color: '#888' },
-  trustLevel:     { fontSize: 16, fontWeight: '500', marginTop: 4 },
-  trustScore:     { fontSize: 48, fontWeight: 'bold' },
-  sectionTitle:   { fontSize: 16, fontWeight: 'bold', color: '#333',
-                    paddingHorizontal: 16, marginBottom: 12 },
-  grid:           { flexDirection: 'row', flexWrap: 'wrap',
-                    paddingHorizontal: 12, gap: 8 },
-  gridItem:       { width: '47%', backgroundColor: '#fff', borderRadius: 12,
-                    padding: 20, alignItems: 'center', marginBottom: 4 },
-  gridIcon:       { fontSize: 32, marginBottom: 8 },
-  gridLabel:      { fontSize: 14, fontWeight: '500', color: '#333' },
-  orderBtn:       { margin: 16, backgroundColor: '#FF6B35',
-                    padding: 18, borderRadius: 12 },
-  orderBtnText:   { color: '#fff', textAlign: 'center',
-                    fontSize: 16, fontWeight: 'bold' },
+  container: { flex: 1, backgroundColor: Theme.colors.background },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  header: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', padding: Theme.spacing.xl, paddingTop: Theme.spacing.xxl,
+    paddingBottom: Theme.spacing.xl,
+    backgroundColor: Theme.colors.primary,
+    borderBottomLeftRadius: Theme.borderRadius.xl,
+    borderBottomRightRadius: Theme.borderRadius.xl,
+    ...Theme.shadows.medium
+  },
+  greeting: { ...Theme.typography.caption, color: 'rgba(255,255,255,0.8)', marginBottom: 2 },
+  name: { ...Theme.typography.h2, color: '#fff' },
+  profileBtn: {
+    width: 48, height: 48, borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center', justifyContent: 'center'
+  },
+  profileBtnText: { fontSize: 24 },
+  trustBanner: {
+    backgroundColor: Theme.colors.card, margin: Theme.spacing.m,
+    marginTop: -Theme.spacing.l, borderRadius: Theme.borderRadius.l,
+    padding: Theme.spacing.l, flexDirection: 'row',
+    justifyContent: 'space-between', alignItems: 'center',
+    ...Theme.shadows.medium, elevation: 6
+  },
+  trustLabel: { ...Theme.typography.caption, fontWeight: '600', color: Theme.colors.textLight },
+  trustLevel: { ...Theme.typography.body, fontWeight: 'bold', marginTop: Theme.spacing.xs },
+  trustScore: { fontSize: 44, fontWeight: 'bold' },
+  sectionTitle: { ...Theme.typography.h3, paddingHorizontal: Theme.spacing.m, marginBottom: Theme.spacing.s, marginTop: Theme.spacing.s },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: Theme.spacing.s, justifyContent: 'center', gap: Theme.spacing.s },
+  gridItem: {
+    width: '46%', backgroundColor: Theme.colors.card, borderRadius: Theme.borderRadius.l,
+    padding: Theme.spacing.l, alignItems: 'center', marginBottom: Theme.spacing.xs,
+    ...Theme.shadows.small
+  },
+  gridIcon: { fontSize: 36, marginBottom: Theme.spacing.s },
+  gridLabel: { ...Theme.typography.body, fontWeight: '600' },
+  orderBtn: {
+    margin: Theme.spacing.m, backgroundColor: Theme.colors.primary,
+    padding: Theme.spacing.l, borderRadius: Theme.borderRadius.l,
+    ...Theme.shadows.medium, alignItems: 'center', marginTop: Theme.spacing.l
+  },
+  orderBtnText: { ...Theme.typography.button, fontSize: 18 },
 });

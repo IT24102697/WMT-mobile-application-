@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, Alert, ScrollView, ActivityIndicator,
-  KeyboardAvoidingView, Platform
+  KeyboardAvoidingView, Platform, StatusBar
 } from 'react-native';
 import api from '../services/api';
+import { Theme } from '../theme';
 
 export default function RegisterScreen({ navigation }) {
   const [role, setRole] = useState(null); // 'CUSTOMER' or 'STAFF'
@@ -184,8 +185,12 @@ export default function RegisterScreen({ navigation }) {
           }
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-          <Text style={styles.link}>Already have an account? Login</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.footerLinkContainer}>
+            <Text style={styles.linkText}>
+              Already have an account? <Text style={styles.linkHighlight}>Login</Text>
+            </Text>
         </TouchableOpacity>
 
         <View style={{ height: 40 }} />
@@ -195,36 +200,41 @@ export default function RegisterScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container:       { flex: 1, backgroundColor: '#fff' },
-  inner:           { padding: 24, paddingTop: 20 },
-  roleContainer:   { flex: 1, backgroundColor: '#fff', padding: 24,
-                     justifyContent: 'center' },
-  logo:            { fontSize: 36, textAlign: 'center', marginBottom: 8 },
-  roleTitle:       { fontSize: 20, fontWeight: 'bold', textAlign: 'center',
-                     marginBottom: 32, color: '#333' },
-  roleCard:        { flexDirection: 'row', alignItems: 'center',
-                     backgroundColor: '#f9f9f9', borderRadius: 16,
-                     padding: 20, marginBottom: 16,
-                     borderWidth: 1, borderColor: '#eee' },
-  roleIcon:        { fontSize: 36, marginRight: 16 },
-  roleInfo:        { flex: 1 },
-  roleCardTitle:   { fontSize: 18, fontWeight: 'bold', color: '#333' },
-  roleCardSub:     { fontSize: 13, color: '#888', marginTop: 4 },
-  roleArrow:       { fontSize: 20, color: '#FF6B35', fontWeight: 'bold' },
-  header:          { flexDirection: 'row', alignItems: 'center', marginBottom: 24 },
-  backBtn:         { color: '#FF6B35', fontSize: 16, marginRight: 12 },
-  headerTitle:     { fontSize: 18, fontWeight: 'bold', color: '#333' },
-  infoBanner:      { backgroundColor: '#fff3e0', borderRadius: 10,
-                     padding: 12, marginBottom: 16 },
-  infoBannerText:  { color: '#e65100', fontSize: 13 },
-  sectionTitle:    { fontSize: 14, fontWeight: 'bold', color: '#888',
-                     marginBottom: 12, marginTop: 8,
-                     textTransform: 'uppercase', letterSpacing: 1 },
-  input:           { borderWidth: 1, borderColor: '#ddd', borderRadius: 10,
-                     padding: 14, marginBottom: 12, fontSize: 15 },
-  btn:             { backgroundColor: '#FF6B35', padding: 16,
-                     borderRadius: 10, marginBottom: 16, marginTop: 8 },
-  btnText:         { color: '#fff', textAlign: 'center',
-                     fontSize: 16, fontWeight: 'bold' },
-  link:            { textAlign: 'center', color: '#FF6B35', fontSize: 14 },
+  container: { flex: 1, backgroundColor: Theme.colors.background },
+  inner: { padding: Theme.spacing.l, paddingTop: Theme.spacing.xl },
+  roleContainer: { flex: 1, backgroundColor: Theme.colors.background, padding: Theme.spacing.l, justifyContent: 'center' },
+  logo: { fontSize: 40, textAlign: 'center', marginBottom: Theme.spacing.m },
+  roleTitle: { ...Theme.typography.h2, textAlign: 'center', marginBottom: Theme.spacing.xxl },
+  roleCard: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: Theme.colors.card, borderRadius: Theme.borderRadius.l,
+    padding: Theme.spacing.l, marginBottom: Theme.spacing.m,
+    ...Theme.shadows.medium, borderWidth: 0
+  },
+  roleIcon: { fontSize: 36, marginRight: Theme.spacing.m },
+  roleInfo: { flex: 1 },
+  roleCardTitle: { ...Theme.typography.h3, marginBottom: Theme.spacing.xs },
+  roleCardSub: { ...Theme.typography.caption, color: Theme.colors.textLight },
+  roleArrow: { fontSize: 24, color: Theme.colors.primary, fontWeight: 'bold' },
+  header: { flexDirection: 'row', alignItems: 'center', marginBottom: Theme.spacing.xl, marginTop: Theme.spacing.xl },
+  backBtn: { color: Theme.colors.primary, fontSize: 16, marginRight: Theme.spacing.m, fontWeight: '600' },
+  headerTitle: { ...Theme.typography.h2 },
+  infoBanner: { backgroundColor: '#fff3e0', borderRadius: Theme.borderRadius.m, padding: Theme.spacing.m, marginBottom: Theme.spacing.l },
+  infoBannerText: { color: '#e65100', fontSize: 13, fontWeight: '500' },
+  sectionTitle: { ...Theme.typography.caption, fontWeight: 'bold', color: Theme.colors.textLight, marginBottom: Theme.spacing.s, marginTop: Theme.spacing.s, textTransform: 'uppercase', letterSpacing: 1 },
+  input: {
+    backgroundColor: Theme.colors.card, borderWidth: 1, borderColor: Theme.colors.border,
+    borderRadius: Theme.borderRadius.m, padding: Theme.spacing.m, marginBottom: Theme.spacing.m,
+    ...Theme.typography.body, ...Theme.shadows.small
+  },
+  btn: {
+    backgroundColor: Theme.colors.primary, padding: Theme.spacing.m,
+    borderRadius: Theme.borderRadius.m, marginBottom: Theme.spacing.m, marginTop: Theme.spacing.s,
+    ...Theme.shadows.medium, alignItems: 'center'
+  },
+  btnText: { ...Theme.typography.button },
+  link: { textAlign: 'center', color: Theme.colors.primary, fontSize: 14, fontWeight: '600' },
+  footerLinkContainer: { paddingVertical: Theme.spacing.s, alignItems: 'center' },
+  linkText: { ...Theme.typography.body, color: Theme.colors.textLight },
+  linkHighlight: { color: Theme.colors.primary, fontWeight: 'bold' },
 });
