@@ -4,28 +4,21 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 
-// Email transporter
+// Email transporter — port 587 + TLS works on Railway
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 587,
-  secure: false, // true for 465, false for other ports
+  secure: false,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
   tls: {
     rejectUnauthorized: false
-  },
-  connectionTimeout: 10000, // 10 seconds timeout
-  greetingTimeout: 10000,
-  socketTimeout: 10000,
+  }
 });
 
 const sendEmail = async (to, subject, html) => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.log(`\n[EMAIL MOCK - NO CREDENTIALS] To: ${to}\nLink/Content:\n${html}\n`);
-    return; // Don't throw, just mock so it doesn't break if credentials are missing
-  }
   try {
     await transporter.sendMail({
       from: `"UrbanPlate" <${process.env.EMAIL_USER}>`,
