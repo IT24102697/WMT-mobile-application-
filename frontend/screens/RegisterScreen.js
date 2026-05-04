@@ -185,8 +185,6 @@ export default function RegisterScreen({ navigation }) {
           }
         </TouchableOpacity>
 
-        </TouchableOpacity>
-
         <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.footerLinkContainer}>
             <Text style={styles.linkText}>
               Already have an account? <Text style={styles.linkHighlight}>Login</Text>
